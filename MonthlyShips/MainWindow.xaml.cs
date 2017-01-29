@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32;
 using MonthlyShifts.Properties;
-using MonthlyShips;
+using MonthlyShifts;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OfficeOpenXml;

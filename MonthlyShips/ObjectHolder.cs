@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonthlyShips
+namespace MonthlyShifts
 {
     public class ObjectHolder : INotifyPropertyChanged
     {
