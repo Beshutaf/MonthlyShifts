@@ -34,7 +34,7 @@
             <ColumnDefinition Width="80"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="9*"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
         <Calendar Name="monthPicker" DisplayMode="Year" DisplayModeChanged="Calendar_DisplayModeChanged" Margin="5" Grid.RowSpan="2"/>
