@@ -11,7 +11,7 @@ namespace MonthlyShifts
     {
         private string _text;
         private bool _isChecked;
-        private bool _isDimmed;
+        private int _timesSelected;
 
         public string Text
         {
@@ -37,16 +37,16 @@ namespace MonthlyShifts
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsChecked"));
             }
         }
-        public bool IsDimmed
+        public int TimesSelected
         {
             get
             {
-                return _isDimmed;
+                return _timesSelected;
             }
             set
             {
-                _isDimmed = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsDimmed"));
+                _timesSelected = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("TimesSelected"));
             }
         }
         public event PropertyChangedEventHandler PropertyChanged;

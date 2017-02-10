@@ -13,13 +13,16 @@
             <CheckBox IsChecked="{Binding IsChecked, Mode=OneWay}" Content="{Binding Text, Mode=OneTime}" Checked="CheckBox_Checked" Unchecked="CheckBox_Checked">
                 <CheckBox.Style>
                     <Style TargetType="CheckBox">
-                        <Setter Property="Foreground" Value="Black"/>
+                        <Setter Property="Foreground" Value="Violet"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsDimmed}" Value="True">
-                                <Setter Property="Foreground" Value="Gray"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding IsDimmed}" Value="False">
+                            <DataTrigger Binding="{Binding TimesSelected}" Value="0">
                                 <Setter Property="Foreground" Value="Black"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding TimesSelected}" Value="1">
+                                <Setter Property="Foreground" Value="Red"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding TimesSelected}" Value="2">
+                                <Setter Property="Foreground" Value="Orange"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -37,7 +40,13 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
-        <Calendar Name="monthPicker" DisplayMode="Year" DisplayModeChanged="Calendar_DisplayModeChanged" Margin="5" Grid.RowSpan="2"/>
+        <StackPanel Orientation="Vertical" Margin="5">
+            <Calendar Name="monthPicker" DisplayMode="Year" DisplayModeChanged="Calendar_DisplayModeChanged"/>
+            <TextBlock Text="אופציה שלא נבחרה"/>
+            <TextBlock Text="אופציה שנבחרה פעם אחת" Foreground="Red"/>
+            <TextBlock Text="אופציה שנבחרה פעמיים" Foreground="Orange"/>
+            <TextBlock Text="אופציה שנבחרה שלוש פעמים ומעלה" Foreground="Violet"/>
+        </StackPanel>
         <Button Padding="5" Content="צור תבנית חודשית" Click="CreateTemplate_Click" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Height="27" Width="115"/>
         <DataGrid Name="listViewPeopleList" DockPanel.Dock="Top" Margin="4.8,5,4.6,4.8" Grid.Column="1" Grid.ColumnSpan="2" BorderBrush="Gray" AutoGenerateColumns="False">
             <DataGrid.Columns>

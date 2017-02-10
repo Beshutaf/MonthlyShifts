@@ -259,6 +259,7 @@ namespace MonthlyShifts
             _participants.Clear();
             try
             {
+                ((Button)sender).IsEnabled = false;
                 await Task.Run(async () =>
                 {
                     using (var doodleRequest = new WebClient())
@@ -292,6 +293,10 @@ namespace MonthlyShifts
                 MessageBox.Show(string.Format("{0}\n{1}", "בעיה התרחשה בקריאת הסקר. נא ודא שהוכנסה כתובת נכונה. דוגמא:", "http://doodle.com/poll/632tfd3cge2tpctr"));
                 return;
             }
+            finally
+            {
+                ((Button)sender).IsEnabled = true;
+            }
         }
 
         private ObservableCollection<ObjectHolder> GenerateParsedPreferencesForParticipant(Participant participant, DoodlePoll pollResults, char charToParse)
@@ -315,18 +320,29 @@ namespace MonthlyShifts
             {
                 var option = (ObjectHolder)((CheckBox)sender).DataContext;
                 string optionText = option.Text;
-                bool value = ((CheckBox)sender).IsChecked ?? false;
-                int previouslyCheckedOptions = _participants.Count(p => p.OptionsY.Union(p.OptionsM).Any(o => o.Text == optionText && o.IsChecked));
-                option.IsChecked = value;
-                int currentlyCheckedOptions = _participants.Count(p => p.OptionsY.Union(p.OptionsM).Any(o => o.Text == optionText && o.IsChecked));
-                if (currentlyCheckedOptions + previouslyCheckedOptions == 1)
-                {
-                    SetDimForOption(optionText, value);
-                }
+                int previousTimesOptionSelected = _participants.Count(p => p.OptionsY.Union(p.OptionsM).Any(o => o.Text == optionText && o.IsChecked));
+                option.IsChecked = ((CheckBox)sender).IsChecked ?? false;
+                int currentTimesOptionSelected = _participants.Count(p => p.OptionsY.Union(p.OptionsM).Any(o => o.Text == optionText && o.IsChecked));
+                SetTimesSelectedForOption(optionText, currentTimesOptionSelected);
+                ReOrderParticipants();
             }
         }
 
-        private void SetDimForOption(string optionText, bool value)
+        private void ReOrderParticipants()
+        {
+            int timesSelectedToOrderBy = _participants.Min(p => p.OptionsY.Min(o => o.TimesSelected));
+            _participants = new ObservableCollection<Participant>(_participants.OrderBy(p => p.OptionsY.Any(o => o.IsChecked))
+                                .ThenByDescending(p => p.OptionsY.Any(o => o.TimesSelected == timesSelectedToOrderBy))
+                                .ThenBy(p => p.OptionsY.Count(o => o.TimesSelected == timesSelectedToOrderBy)));
+            listViewPeopleList.ItemsSource = _participants;
+        }
+
+        /// <summary>
+        /// Iterates over all participants, checks which ones have marked an option equivalent to <paramref name="optionText"/>, and updates their TimesSelected property.
+        /// </summary>
+        /// <param name="optionText">Relevant option to check</param>
+        /// <param name="value">The amount of times that <paramref="optionText"/> is selected</param>
+        private void SetTimesSelectedForOption(string optionText, int value)
         {
             foreach (var participant in _participants)
             {
@@ -334,7 +350,7 @@ namespace MonthlyShifts
                 {
                     if (opt.Text == optionText)
                     {
-                        opt.IsDimmed = value;
+                        opt.TimesSelected = value;
                     }
                 }
             }
