@@ -330,7 +330,17 @@ namespace MonthlyShifts
 
         private void ReOrderParticipants()
         {
-            int timesSelectedToOrderBy = _participants.Min(p => p.OptionsY.Min(o => o.TimesSelected));
+            int timesSelectedToOrderBy = _participants.Min(p =>
+            {
+                try
+                {
+                    return p.OptionsY.Min(o => o.TimesSelected);
+                }
+                catch
+                {
+                    return 0;
+                }
+            });
             _participants = new ObservableCollection<Participant>(_participants.OrderBy(p => p.OptionsY.Any(o => o.IsChecked))
                                 .ThenByDescending(p => p.OptionsY.Any(o => o.TimesSelected == timesSelectedToOrderBy))
                                 .ThenBy(p => p.OptionsY.Count(o => o.TimesSelected == timesSelectedToOrderBy)));
