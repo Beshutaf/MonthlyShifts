@@ -253,13 +253,23 @@ namespace MonthlyShifts
         #endregion
 
         #region Process poll results
+
+        private void textBoxDoodleUrl_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && readDoodleButton.IsEnabled)
+            {
+                GetDoodleResults_Click(sender, e);
+            }
+        }
+
         private async void GetDoodleResults_Click(object sender, RoutedEventArgs e)
         {
             string json;
             _participants.Clear();
             try
             {
-                ((Button)sender).IsEnabled = false;
+                readDoodleButton.IsEnabled = false;
+                textBoxDoodleUrl.IsEnabled = false;
                 await Task.Run(async () =>
                 {
                     using (var doodleRequest = new WebClient())
@@ -295,7 +305,8 @@ namespace MonthlyShifts
             }
             finally
             {
-                ((Button)sender).IsEnabled = true;
+                readDoodleButton.IsEnabled = true;
+                textBoxDoodleUrl.IsEnabled = true;
             }
         }
 
