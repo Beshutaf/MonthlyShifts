@@ -1,8 +1,6 @@
 ﻿using Microsoft.Win32;
 using MonthlyShifts.Properties;
-using MonthlyShifts;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
@@ -15,13 +13,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.Xml.Serialization;
 
 namespace MonthlyShifts
 {
@@ -54,13 +47,13 @@ namespace MonthlyShifts
         }
         #endregion
 
-        #region Ships
-        private void MakeShips()
+        #region Shifts
+        private void MakeShifts()
         {
-            CreateShipsFromDictionary(ReadShipsFromConfigFile());
+            CreateShiftsFromDictionary(ReadShiftsFromConfigFile());
         }
 
-        private Dictionary<string, string[]> ReadShipsFromConfigFile()
+        private Dictionary<string, string[]> ReadShiftsFromConfigFile()
         {
             try
             {
@@ -73,7 +66,7 @@ namespace MonthlyShifts
             }
         }
 
-        private void CreateShipsFromDictionary(Dictionary<string, string[]> dictionary)
+        private void CreateShiftsFromDictionary(Dictionary<string, string[]> dictionary)
         {
             DateTime currentDate = SetFirstDate();
             int relevantMonth = currentDate.Month;
@@ -110,28 +103,27 @@ namespace MonthlyShifts
         }
         #endregion
 
-        #region File
+        #region Template
         private void CreateWorkbookWorksheet(ExcelPackage p)
         {
             _worksheet = p.Workbook.Worksheets.Add("משמרות");
             _worksheet.View.RightToLeft = true;
         }
 
-        private void OpenSaveFileDialog(ExcelPackage package)
+        private void SaveFile(string filter, string fileName, Action<string> saveAction)
         {
-            string month;
-            if (!_months.TryGetValue(monthPicker.DisplayDate.Month, out month))
+            if (!_months.TryGetValue(monthPicker.DisplayDate.Month, out string month))
             {
                 month = monthPicker.DisplayDate.Month.ToString();
             }
-            SaveFileDialog a = new SaveFileDialog()
+            SaveFileDialog dialog = new SaveFileDialog()
             {
-                FileName = string.Format("{0} {1} {2}", "תבנית משמרות", month, monthPicker.DisplayDate.Year),
-                Filter = "Excel Documents |*.xlsx"
+                FileName = string.Format("{0} {1} {2}", fileName, month, monthPicker.DisplayDate.Year),
+                Filter = filter
             };
-            if (a.ShowDialog() == true)
+            if (dialog.ShowDialog() == true)
             {
-                package.SaveAs(new System.IO.FileInfo(a.FileName));
+                saveAction(dialog.FileName);
             }
         }
         #endregion
@@ -246,15 +238,16 @@ namespace MonthlyShifts
             CreateWorkbookWorksheet(package);
             try { MakeHeaders(); }
             catch { return; }
-            try { MakeShips(); }
+            try { MakeShifts(); }
             catch { return; }
-            OpenSaveFileDialog(package);
+            SaveFile("Excel Documents |*.xlsx", "תבנית משמרות", (fileName) => package.SaveAs(new System.IO.FileInfo(fileName)));
         }
         #endregion
 
+
         #region Process poll results
 
-        private void textBoxDoodleUrl_KeyDown(object sender, KeyEventArgs e)
+        private void TextBoxDoodleUrl_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter && readDoodleButton.IsEnabled)
             {
@@ -375,6 +368,71 @@ namespace MonthlyShifts
                     }
                 }
             }
+        }
+        #endregion
+
+        #region Save/Load Poll
+
+        /// <summary>
+        /// Serializes <see cref="_participants"/> to an XML file
+        /// </summary>
+        /// <param name="filePath">Path to XML file</param>
+        private void SerializeToXML(string filePath)
+        {
+            try
+            {
+                XmlSerializer xs = new XmlSerializer(typeof(ObservableCollection<Participant>));
+                using (StreamWriter wr = new StreamWriter(filePath))
+                {
+                    xs.Serialize(wr, _participants);
+                }
+            }
+            catch
+            {
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Deserializes <see cref="_participants"/> from an XML file
+        /// </summary>
+        /// <param name="filePath">Path to XML file</param>
+        private void DeserializeFromXML(string filePath)
+        {
+            try
+            {
+                XmlSerializer xs = new XmlSerializer(typeof(ObservableCollection<Participant>));
+                using (StreamReader rd = new StreamReader(filePath))
+                {
+                    _participants = xs.Deserialize(rd) as ObservableCollection<Participant>;
+                }
+                listViewPeopleList.ItemsSource = _participants;
+            }
+            catch
+            {
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Saves current poll processing status to a file
+        /// </summary>
+        private void Save_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFile("XML Files | *.xml", "שיבוצי ביניים", (fileName) => SerializeToXML(fileName));
+        }
+
+        /// <summary>
+        /// Loads poll processing status from a file
+        /// </summary>
+        private void Load_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog()
+            {
+                Filter = "XML Files | *.xml"
+            };
+            if (dialog.ShowDialog() == true)
+                DeserializeFromXML(dialog.FileName);
         }
         #endregion
     }
